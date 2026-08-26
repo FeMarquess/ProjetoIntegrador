@@ -119,11 +119,19 @@ body {
   margin: 0px 50px 30px 50px;
 }
 
+.containerAgendaUnica{
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .agendaDia{
   display: flex;
   flex-direction: column;
   width: 20vw;
-  height: 18vh;
+  height: 24vh;
   padding: 20px 30px;
   margin: 10px;
   border: 1px solid;
@@ -160,4 +168,78 @@ body {
   justify-content: center;
   margin: 10px 0px;
   font-size: larger;
+}
+
+.ContainerCardAgenda {
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+.CardAgenda {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.containerFormAgenda{
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  height: 25h;
+  width: 35vw;
+  padding-top: 20px;
+  border-radius: 20px;
+  background-color: #2c2c2c;
+}
+
+.containerFormAgenda label{
+}
+
+.formAgenda div{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 3px;
+}
+
+.formAgenda input{
+  border-radius: 4px;
+  padding-left: 8px;
+  margin-left: 20px;
+  border-color: #000000;
+  background-color: #474747;
+}
+
+.formAgenda{
+  display: grid;
+  padding: 2vmax;
+  margin-top: -10px;
+}
+
+.tituloFormAgenda{
+  display: flex;
+  justify-content: center;
+  font-size: larger;
+}
+
+.botaoForm{
+  cursor: pointer;
+}
+
+input[type="datetime-local"]:focus,
+input[type="datetime-local"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+input[type="datetime-local"]:-moz-focusring {
+  outline: none;
 }
