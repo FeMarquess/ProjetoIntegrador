@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #313131;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground); 
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #313131;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: #313131;
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.homePage{
+  background-color:#313131;
+}
+
+.Navbar{
+  background: #171717;
+}
+
+.NavbarLista{
+  display: inline-flex;
+  padding-right: 10px;
+}
+
+.itemNav{
+  padding: 0px 0px 0px 15px;
+}
+
+.fc{
+  height: 800px;
+  padding: 20px 50px;
+}
+
+.fc-day-today {
+  background-color: #474747 !important;
+}
+
+.fc-daygrid-day:hover{
+  background-color: #474747;
+}
+
+.dia-selecionado {
+  background-color: #007bff !important;
+  color: white;
+  border-radius: 8px;
+}
+
+.calendario{
+  height: 800px;
+}
+
+.evento-verde{
+  background-color: rgb(221, 255, 223);
+  color: #171717;
+}
+
+.evento-amarelo{
+  background-color: rgb(252, 253, 210);
+    color: #171717;
+}
+
+.evento-azul{
+  background-color: rgb(207, 224, 255);
+    color: #171717;
+}
+
+.evento-verde .fc-daygrid-event-dot {
+  border-color: red !important;
+}
+
+.evento-amarelo .fc-daygrid-event-dot {
+  border-color: rgb(0, 0, 255) !important;
+}
+.fc-daygrid-event:hover{
+  background-color: #383838;
+}
+.evento-azul .fc-daygrid-event-dot {
+  border-color: rgb(136, 255, 0) !important;
+}
+
+.fc .fc-button {
+  background-color: #2c2c2c;
+  border: none;
+  color: white;
+}
+
+.fc .fc-button:hover {
+  background-color: #ff0000;
+}
+.fc-day{
+  height: 15vh;
+  max-height: 15hv;
+}
+
+.containerAgendaDia{
+  display: grid;
+  gap: 16px;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 0px 70px;
+  margin: 0px 50px 30px 50px;
+}
+
+.agendaDia{
+  display: flex;
+  flex-direction: column;
+  width: 20vw;
+  height: 18vh;
+  padding: 20px 30px;
+  margin: 10px;
+  border: 1px solid;
+  border-radius: 15px;
+  border-color: #ffffff;
+  background-color: #fffed0;
+  color: #171717;
+  justify-content: start;
+  align-self: center;
+  align-content: center;
+}
+
+.botoesCard{
+  display: flex;
+  width: 100%;
+  align-items: start;
+  align-content: start;
+}
+
+.botaoEditar{
+  cursor: pointer;
+}
+.botaoExcluir{
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.containerCondeudo{
+  padding: 5px 0px;
+}
+
+.titulo{
+  display: flex;
+  justify-content: center;
+  margin: 10px 0px;
+  font-size: larger;
+}
