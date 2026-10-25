@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
+import Link from 'next/link';
 import { api } from '@/src/services/api';
 import { Funcionario } from '@/src/types/funcionario';
 import { TipoAgenda } from '@/src/types/tipoAgenda';
@@ -87,6 +88,7 @@ export default function Profissionais() {
               ))}
             </select>
           </div>
+          <Link href='/especialidades' className='linkCadastro'>+ Cadastrar especialidade</Link>
           <div>
             {funcionario.id ? <button type='button' className='botaoForm' onClick={() => setFuncionario(funcionarioVazio)}>Cancelar</button> : <span/>}
             <button type='submit' className='botaoForm'>Salvar</button>

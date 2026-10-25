@@ -112,11 +112,8 @@ body {
 .containerAgendaDia{
   display: grid;
   gap: 16px;
-  align-content: center;
-  justify-content: center;
   align-items: center;
-  grid-template-columns: repeat(4, 1fr);
-  padding: 0px 70px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   margin: 0px 50px 30px 50px;
 }
 
@@ -131,7 +128,6 @@ body {
 .agendaDia{
   display: flex;
   flex-direction: column;
-  width: 20vw;
   min-height: 24vh;
   padding: 20px 30px;
   margin: 10px;
@@ -329,4 +325,11 @@ input[type="datetime-local"]:-moz-focusring {
 .mensagemCadastro{
   text-align: center;
   min-height: 1.5em;
+}
+
+.linkCadastro{
+  justify-self: end;
+  font-size: small;
+  text-decoration: underline;
+  margin: 3px;
 }
