@@ -4,6 +4,9 @@ import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Agenda } from '@/src/types/agenda';
+import { Cliente } from '@/src/types/cliente';
+import { Funcionario } from '@/src/types/funcionario';
+import { TipoAgenda } from '@/src/types/tipoAgenda';
 
 interface IparametrosAgenda {
     Editar: boolean,
@@ -19,6 +22,22 @@ interface props {
 
 export function Modal({ params, onClose, agenda }: props,) {
     const [agendas, setAgendas] = useState<Agenda | null>(null)
+    const [clientes, setClientes] = useState<Cliente[]>([])
+    const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
+    const [tipos, setTipos] = useState<TipoAgenda[]>([])
+
+    useEffect(() => {
+        if (!params.Aberto) return
+        Promise.all([
+            api.get('/clienteBuscar'),
+            api.get('/funcionarioBuscar'),
+            api.get('/tipoAgendaBuscar')
+        ]).then(([resClientes, resFuncionarios, resTipos]) => {
+            setClientes(resClientes.data as Cliente[])
+            setFuncionarios(resFuncionarios.data as Funcionario[])
+            setTipos(resTipos.data as TipoAgenda[])
+        }).catch((error) => console.error(error))
+    }, [params.Aberto])
     
     useEffect(() => {
   if (params.Aberto && agenda) {
@@ -144,20 +163,29 @@ export function Modal({ params, onClose, agenda }: props,) {
                                 </div>
                                 <div>
                                     <label>Cliente:</label>
-                                    <input 
-                                        type='text' 
+                                    <select 
                                         name='clienteId'
                                         value={agendas?.clienteId || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, clienteId: Number(e.target.value) })}/>
+                                        onChange={(e) => setAgendas({ ...agendas!, clienteId: Number(e.target.value) })} 
+                                        required>
+                                        <option value='' disabled>Selecione</option>
+                                        {clientes.map((item) => (
+                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
-                                    <label>Funcionario:</label>
-                                    <input 
-                                        type='text' 
+                                    <label>Profissional:</label>
+                                    <select 
                                         name='funcionarioId'
                                         value={agendas?.funcionarioId || ''} 
                                         onChange={(e) => setAgendas({ ...agendas!, funcionarioId: Number(e.target.value) })} 
-                                        required/>
+                                        required>
+                                        <option value='' disabled>Selecione</option>
+                                        {funcionarios.map((item) => (
+                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label>Início da agenda:</label>
@@ -187,12 +215,16 @@ export function Modal({ params, onClose, agenda }: props,) {
                                 </div>
                                 <div>
                                     <label>Tipo de agenda:</label>
-                                    <input 
-                                        type='text' 
+                                    <select 
                                         name='tipoAgendaId'
                                         value={agendas?.tipoAgendaId || ''} 
                                         onChange={(e) => setAgendas({ ...agendas!, tipoAgendaId: Number(e.target.value) })} 
-                                        required/>
+                                        required>
+                                        <option value='' disabled>Selecione</option>
+                                        {tipos.map((item) => (
+                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <button type='submit' className='botaoForm'>Salvar</button>
                             </form>
@@ -219,20 +251,29 @@ export function Modal({ params, onClose, agenda }: props,) {
                                 </div>
                                 <div>
                                     <label>Cliente:</label>
-                                    <input 
-                                        type='text' 
+                                    <select 
                                         name='clienteId'
                                         value={agendas?.clienteId || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, clienteId: Number(e.target.value) })}/>
+                                        onChange={(e) => setAgendas({ ...agendas!, clienteId: Number(e.target.value) })} 
+                                        required>
+                                        <option value='' disabled>Selecione</option>
+                                        {clientes.map((item) => (
+                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
-                                    <label>Funcionario:</label>
-                                    <input 
-                                        type='text' 
+                                    <label>Profissional:</label>
+                                    <select 
                                         name='funcionarioId'
                                         value={agendas?.funcionarioId || ''} 
                                         onChange={(e) => setAgendas({ ...agendas!, funcionarioId: Number(e.target.value) })} 
-                                        required/>
+                                        required>
+                                        <option value='' disabled>Selecione</option>
+                                        {funcionarios.map((item) => (
+                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label>Início da agenda:</label>
@@ -254,12 +295,16 @@ export function Modal({ params, onClose, agenda }: props,) {
                                 </div>
                                 <div>
                                     <label>Tipo de agenda:</label>
-                                    <input 
-                                        type='text' 
+                                    <select 
                                         name='tipoAgendaId'
                                         value={agendas?.tipoAgendaId || ''} 
                                         onChange={(e) => setAgendas({ ...agendas!, tipoAgendaId: Number(e.target.value) })} 
-                                        required/>
+                                        required>
+                                        <option value='' disabled>Selecione</option>
+                                        {tipos.map((item) => (
+                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <button type='submit' className='botaoForm'>Salvar</button>
                             </form>
