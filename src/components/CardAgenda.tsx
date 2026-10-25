@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Agenda } from '@/.next/dev/types/agenda';
+import { Agenda } from '@/src/types/agenda';
 
 interface IparametrosAgenda {
     Editar: boolean,
@@ -112,7 +112,7 @@ export function Modal({ params, onClose, agenda }: props,) {
           horaFim: respostaForm.horaFim
         })
     
-        // onClose()
+        onClose()
     }
 
     function formatarDataLocal(data: Date) {

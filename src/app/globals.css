@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
+/* o layout é só escuro (body fixo em #313131), então o texto é claro em qualquer tema do sistema */
 :root {
-  --background: #ffffff;
-  --foreground: #313131;
+  --background: #313131;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -131,7 +132,7 @@ body {
   display: flex;
   flex-direction: column;
   width: 20vw;
-  height: 24vh;
+  min-height: 24vh;
   padding: 20px 30px;
   margin: 10px;
   border: 1px solid;

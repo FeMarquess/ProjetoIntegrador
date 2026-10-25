@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@/src/services/api';
-import { Agenda } from '@/.next/dev/types/agenda';
+import { Agenda } from '@/src/types/agenda';
 import { Modal } from '@/src/components/CardAgenda';
 
 interface IparametrosAgenda{
@@ -18,6 +18,7 @@ export default function CardEvento() {
   const [evento, setEventos] = useState<Agenda| null>(null)
   const [parametrosAgenda, setParametrosAgenda] = useState<IparametrosAgenda>({Editar: false, Criar: false, Aberto: false})
   const idParam = searchParams.get('id')
+  const router = useRouter()
     useEffect(() => {
       carregar();
     }, [idParam]) 
@@ -59,12 +60,14 @@ const fecharModal = () => {
     Criar: false,
     Aberto: false
   })
+  carregar()
 }
 
   async function deletarAgenda() {
     const res = await api.delete('/deletarAgenda',{
       params: {id: idParam}
     })
+    router.push('/agenda')
   }
 
   if (!evento) return <div>Nenhum evento</div>

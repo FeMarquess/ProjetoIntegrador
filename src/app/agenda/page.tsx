@@ -7,8 +7,8 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { api } from '@/src/services/api';
 import '../globals.css'
 import { useRouter } from 'next/navigation';
-import { Evento } from '@/.next/dev/types/eventos';
-import { Agenda } from '@/.next/dev/types/agenda';
+import { Evento } from '@/src/types/eventos';
+import { Agenda } from '@/src/types/agenda';
 
 export default function eventos() {
   const [eventos, setEventos] = useState<Evento[]>([]);

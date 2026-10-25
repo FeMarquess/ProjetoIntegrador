@@ -1,22 +1,25 @@
 'use client'
-import { Agenda } from '@/.next/dev/types/agenda'
+import { Agenda } from '@/src/types/agenda'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { api } from '@/src/services/api';
+import { Modal } from '@/src/components/CardAgenda';
 
 export default function AgendaPesquisada () {
   const searchParams = useSearchParams()
   const [eventos, setEventos] = useState<Agenda[]>([])
-  
+  const [parametrosAgenda, setParametrosAgenda] = useState({Editar: false, Criar: false, Aberto: false})
+  const [agendaSelecionada, setAgendaSelecionada] = useState<Agenda | null>(null)
+
   const descricao = searchParams.get('descricao')
 
   console.log(`termo chegou ${descricao}`)
 
   useEffect(() => {       
     carregar()
-  })
+  }, [descricao])
 
 async function carregar() {
   if(descricao)
@@ -45,24 +48,21 @@ async function carregar() {
         }          
     }
 
-  async function editarAgenda(agenda: Agenda){
-    const res = await api.put('/alterarAgenda', {
-      params: { id: agenda },
-      data: {
-        descricao: agenda?.descricao,
-        funcionarioId: agenda?.funcionarioId,
-        clienteId: agenda?.clienteId,
-        tipoAgenda: agenda?.tipoAgendaId,
-        horaInicio: agenda?.horaInicio,
-        horaFim: agenda?.horaFim
-      }
-    })
+  function editarAgenda(agenda: Agenda){
+    setAgendaSelecionada(agenda)
+    setParametrosAgenda({Editar: true, Criar: false, Aberto: true})
+  }
+
+  const fecharModal = () => {
+    setParametrosAgenda({Editar: false, Criar: false, Aberto: false})
+    carregar()
   }
 
   async function deletarAgenda(id: Number) {
     const res = await api.delete('/deletarAgenda',{
       params: {id: id}
     })
+    carregar()
   }
 
 if (eventos.length <= 0) return <div>Nenhum evento</div>
@@ -98,8 +98,13 @@ console.log(eventos)
             </div>
           </div>
         )
-        
+
       })}
+      <Modal
+        params={parametrosAgenda}
+        onClose={fecharModal}
+        agenda={agendaSelecionada}
+      />
       </div>
     </div>
   )

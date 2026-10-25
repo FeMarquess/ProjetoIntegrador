@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Agenda } from '@/.next/dev/types/agenda';
+import { Agenda } from '@/src/types/agenda';
 import { useSearchParams } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
@@ -24,7 +24,7 @@ console.log('[data]')
 
 useEffect(() => {
   carregar();
-}) 
+}, [dataParam]) 
 
     if (!dataParam) return
      async function carregar() {
@@ -52,6 +52,7 @@ useEffect(() => {
     const res = await api.delete('/deletarAgenda',{
       params: {id: id}
     })
+    carregar()
   }
 
   const fecharModal = () => {
@@ -60,6 +61,7 @@ useEffect(() => {
     Criar: false,
     Aberto: false
   })
+  carregar()
 }
 
 
