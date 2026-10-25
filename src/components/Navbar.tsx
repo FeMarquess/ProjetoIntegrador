@@ -3,6 +3,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faPlus , faCalendar } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import '../app/globals.css';
 import { useState } from 'react';
 import Pesquisa from './Pesquisa';
@@ -15,6 +16,9 @@ interface IparametrosAgenda{
 }
 
 const Navbar = () => {
+  // a pesquisa da navbar busca agendas; nas telas de cadastro cada uma tem a sua própria busca
+  const pathname = usePathname()
+  const mostrarPesquisa = pathname === '/' || pathname.startsWith('/agenda')
   const [parametrosAgenda, setParametrosAgenda] = useState<IparametrosAgenda>({Editar: false, Criar: false, Aberto: false})
 
     
@@ -36,7 +40,7 @@ const Navbar = () => {
             <Link href='/' aria-label='Início'>
                 <FontAwesomeIcon className='h-[30px]' icon={faHouse} />
             </Link>
-                <Pesquisa/>
+                {mostrarPesquisa ? <Pesquisa/> : <span/>}
             <ul className='NavbarLista'>
                 <li className='itemNav'>
                     <Link href='/agenda' aria-label='Agenda'><FontAwesomeIcon className='h-[30px]' icon={faCalendar} /></Link>

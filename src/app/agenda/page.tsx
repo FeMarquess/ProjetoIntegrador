@@ -87,7 +87,7 @@ export default function eventos() {
           const params = new URLSearchParams({
             date: dataClicada,
           })
-          router.push(`/agenda/${info.dateStr}?${params.toString()}`);
+          router.push(`/agenda/${dataClicada}?${params.toString()}`);
         })}}
       />
     </div>

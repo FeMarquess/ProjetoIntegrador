@@ -333,3 +333,42 @@ input[type="datetime-local"]:-moz-focusring {
   text-decoration: underline;
   margin: 3px;
 }
+
+.campoBuscaInput{
+  position: relative;
+}
+
+.resultadosBusca{
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 14rem;
+  max-height: 12rem;
+  overflow-y: auto;
+  z-index: 10;
+  border-radius: 4px;
+  background-color: #474747;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.resultadosBusca li{
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.resultadosBusca li:hover{
+  background-color: #5a5a5a;
+}
+
+.resultadosBusca .semResultado{
+  cursor: default;
+  color: #b0b0b0;
+}
+
+.buscaLista{
+  width: 22rem;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: #474747;
+}

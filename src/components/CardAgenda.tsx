@@ -1,12 +1,10 @@
 import '../app/globals.css'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Agenda } from '@/src/types/agenda';
 import { Cliente } from '@/src/types/cliente';
 import { Funcionario } from '@/src/types/funcionario';
-import { TipoAgenda } from '@/src/types/tipoAgenda';
+import CampoBusca, { ItemBusca } from './CampoBusca';
 
 interface IparametrosAgenda {
     Editar: boolean,
@@ -20,40 +18,11 @@ interface props {
     agenda?: Agenda | null
 }
 
-export function Modal({ params, onClose, agenda }: props,) {
-    const [agendas, setAgendas] = useState<Agenda | null>(null)
-    const [clientes, setClientes] = useState<Cliente[]>([])
-    const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
-    const [tipos, setTipos] = useState<TipoAgenda[]>([])
+interface FuncionarioEspecialidade extends Funcionario {
+    especialidade: string
+}
 
-    useEffect(() => {
-        if (!params.Aberto) return
-        Promise.all([
-            api.get('/clienteBuscar'),
-            api.get('/funcionarioBuscar'),
-            api.get('/tipoAgendaBuscar')
-        ]).then(([resClientes, resFuncionarios, resTipos]) => {
-            setClientes(resClientes.data as Cliente[])
-            setFuncionarios(resFuncionarios.data as Funcionario[])
-            setTipos(resTipos.data as TipoAgenda[])
-        }).catch((error) => console.error(error))
-    }, [params.Aberto])
-    
-    useEffect(() => {
-  if (params.Aberto && agenda) {
-    setAgendas(agenda);
-  }
-
-  if (params.Aberto && params.Criar) {
-        setAgendas(agendaVazia)
-  }
-
-  if (!params.Aberto) {
-    setAgendas(null);
-  }
-}, [agenda, params.Aberto]);
-
-    const agendaVazia: Agenda = {
+const agendaVazia: Agenda = {
     id: 0,
     descricao: '',
     clienteId: 0,
@@ -63,74 +32,89 @@ export function Modal({ params, onClose, agenda }: props,) {
     horaFim: null
 }
 
-    function atualizaAgenda(e: React.FormEvent<HTMLFormElement>) {
+const textoCliente = (c: Cliente) => `#${c.id} ${c.descricao}`
+const textoProfissional = (f: Funcionario, especialidade: string) => `#${f.id} ${f.descricao} — ${especialidade}`
+
+async function buscarClientes(termo: string): Promise<ItemBusca[]> {
+    const res = termo
+        ? await api.get('/clienteBuscarNome', { params: { descricao: termo } })
+        : await api.get('/clienteBuscar')
+    return (res.data as Cliente[]).map((c) => ({ id: c.id!, texto: textoCliente(c) }))
+}
+
+export function Modal({ params, onClose, agenda }: props,) {
+    const [agendas, setAgendas] = useState<Agenda | null>(null)
+    const [nomeCliente, setNomeCliente] = useState('')
+    const [nomeProfissional, setNomeProfissional] = useState('')
+    const [profissionais, setProfissionais] = useState<FuncionarioEspecialidade[]>([])
+    const [erro, setErro] = useState('')
+
+    useEffect(() => {
+        setErro('')
+        if (!params.Aberto) {
+            setAgendas(null)
+            return
+        }
+
+        if (params.Criar) {
+            setAgendas(agendaVazia)
+            setNomeCliente('')
+            setNomeProfissional('')
+        } else if (agenda) {
+            setAgendas(agenda)
+            carregarNomes(agenda)
+        }
+    }, [agenda, params.Aberto]);
+
+    // ao editar, mostra nos campos de busca o cliente e a profissional que já estão na agenda
+    async function carregarNomes(agenda: Agenda) {
+        try {
+            const [resCliente, resFuncionario, resTipo] = await Promise.all([
+                api.get('/clienteBuscarId', { params: { id: agenda.clienteId } }),
+                api.get('/funcionarioBuscarId', { params: { id: agenda.funcionarioId } }),
+                api.get('/tipoAgendaBuscarId', { params: { id: agenda.tipoAgendaId } })
+            ])
+            if (resCliente.data?.id) setNomeCliente(textoCliente(resCliente.data))
+            if (resFuncionario.data?.id) setNomeProfissional(textoProfissional(resFuncionario.data, resTipo.data?.descricao || ''))
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    async function buscarProfissionais(termo: string): Promise<ItemBusca[]> {
+        const res = await api.get('/funcionarioBuscarEspecialidade', { params: { descricao: termo } })
+        const lista = res.data as FuncionarioEspecialidade[]
+        setProfissionais(lista)
+        return lista.map((f) => ({ id: f.id!, texto: textoProfissional(f, f.especialidade) }))
+    }
+
+    function escolherProfissional(item: ItemBusca) {
+        const profissional = profissionais.find((f) => f.id === item.id)
+        // o serviço da agenda é a especialidade da profissional escolhida
+        setAgendas({ ...agendas!, funcionarioId: item.id, tipoAgendaId: profissional?.funcao || 0 })
+    }
+
+    async function salvar(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        const formData = new FormData(e.currentTarget);
+        if (!agendas?.clienteId) return setErro('Pesquise e selecione um cliente')
+        if (!agendas?.funcionarioId) return setErro('Pesquise e selecione uma profissional')
 
-        const respostaForm: Agenda = {
-            id: agendas?.id || 0,
-            descricao: formData.get('descricao') as string,
-            clienteId: Number(formData.get('clienteId')),
-            funcionarioId: Number(formData.get('funcionarioId')),
-            horaInicio: new Date(formData.get('horaInicio') as string),
-            horaFim: new Date(formData.get('horaFim') as string),
-            tipoAgendaId: Number(formData.get('tipoAgendaId')),
-        };
+        const dados = {
+            descricao: agendas.descricao,
+            funcionarioId: agendas.funcionarioId,
+            clienteId: agendas.clienteId,
+            tipoAgendaId: agendas.tipoAgendaId,
+            horaInicio: agendas.horaInicio,
+            horaFim: agendas.horaFim
+        }
 
-        editarAgenda(respostaForm)
-    }
-    
-    function criarAgenda(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
+        if (params.Editar) {
+            await api.put('/alterarAgenda', dados, { params: { id: agendas.id } })
+        } else {
+            await api.post('/agenda', dados)
+        }
 
-        const formData = new FormData(e.currentTarget);
-
-        const horaInicio = formData.get('horaInicio') as string
-        const horaFim = formData.get('horaFim') as string
-
-        const respostaForm: Agenda = {
-            id: agendas?.id || 0,
-            descricao: formData.get('descricao') as string,
-            clienteId: Number(formData.get('clienteId')),
-            funcionarioId: Number(formData.get('funcionarioId')),
-            horaInicio: horaInicio ? new Date(horaInicio) : null,
-            horaFim: horaFim ? new Date(horaFim) : null,
-            tipoAgendaId: Number(formData.get('tipoAgendaId')),
-        };
-
-        criarNovaAgenda(respostaForm)
-    }
-
-    async function editarAgenda(respostaForm: Agenda) {
-        const res = await api.put('/alterarAgenda', {     
-          id: agendas?.id,
-          descricao: respostaForm.descricao,
-          funcionarioId: respostaForm.funcionarioId,
-          clienteId: respostaForm.clienteId,
-          tipoAgendaId: respostaForm.tipoAgendaId,
-          horaInicio: respostaForm.horaInicio,
-          horaFim: respostaForm.horaFim
-        },
-        {
-          params: { id: agendas?.id }
-        })
-
-        onClose()
-    }
-
-    async function criarNovaAgenda(respostaForm: Agenda) {
-
-        console.log(respostaForm)
-        const res = await api.post('/agenda', {     
-          descricao: respostaForm.descricao,
-          funcionarioId: respostaForm.funcionarioId,
-          clienteId: respostaForm.clienteId,
-          tipoAgendaId: respostaForm.tipoAgendaId,
-          horaInicio: respostaForm.horaInicio,
-          horaFim: respostaForm.horaFim
-        })
-    
         onClose()
     }
 
@@ -144,175 +128,63 @@ export function Modal({ params, onClose, agenda }: props,) {
     }:${pad(data.getMinutes())}`
 }
 
-    if (params.Aberto) {
-        if (params.Editar) {
-            return (
-                <div className='ContainerCardAgenda' onClick={onClose}>
-                    <div className='CardAgenda' onClick={(e) => e.stopPropagation()} >
-                        <div className='containerFormAgenda'>
-                            <h1 className='tituloFormAgenda'>Editar a agenda</h1>
-                            <form className='formAgenda' id='formAgendaEditar' onSubmit={atualizaAgenda}>
-                                <div>
-                                    <label>Descrição:</label>
-                                    <input 
-                                        type='text' 
-                                        name='descricao'
-                                        value={agendas?.descricao || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, descricao: e.target.value })} 
-                                        required/>
-                                </div>
-                                <div>
-                                    <label>Cliente:</label>
-                                    <select 
-                                        name='clienteId'
-                                        value={agendas?.clienteId || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, clienteId: Number(e.target.value) })} 
-                                        required>
-                                        <option value='' disabled>Selecione</option>
-                                        {clientes.map((item) => (
-                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Profissional:</label>
-                                    <select 
-                                        name='funcionarioId'
-                                        value={agendas?.funcionarioId || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, funcionarioId: Number(e.target.value) })} 
-                                        required>
-                                        <option value='' disabled>Selecione</option>
-                                        {funcionarios.map((item) => (
-                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Início da agenda:</label>
-                                    <input 
-                                        style={{
-                                          outline: 'none',
-                                          boxShadow: 'none'
-                                        }}
-                                        type='datetime-local' 
-                                        name='horaInicio'
-                                        value={agendas?.horaInicio? formatarDataLocal(new Date(agendas.horaInicio)) : ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, horaInicio: e.target.value ? new Date(e.target.value) : null })} 
-                                        required/>
-                                </div>
-                                <div>
-                                    <label>Fim da agenda:</label>
-                                    <input 
-                                        style={{
-                                          outline: 'none',
-                                          boxShadow: 'none'
-                                        }}
-                                        type='datetime-local' 
-                                        name='horaFim'
-                                        value={agendas?.horaFim? formatarDataLocal(new Date(agendas.horaFim)) : ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, horaFim: e.target.value ? new Date(e.target.value) : null })} 
-                                        required/>
-                                </div>
-                                <div>
-                                    <label>Tipo de agenda:</label>
-                                    <select 
-                                        name='tipoAgendaId'
-                                        value={agendas?.tipoAgendaId || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, tipoAgendaId: Number(e.target.value) })} 
-                                        required>
-                                        <option value='' disabled>Selecione</option>
-                                        {tipos.map((item) => (
-                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <button type='submit' className='botaoForm'>Salvar</button>
-                            </form>
+    if (!params.Aberto || !agendas) return null
+
+    return (
+        <div className='ContainerCardAgenda' onClick={onClose}>
+            <div className='CardAgenda' onClick={(e) => e.stopPropagation()} >
+                <div className='containerFormAgenda'>
+                    <h1 className='tituloFormAgenda'>{params.Editar ? 'Editar a agenda' : 'Criar a agenda'}</h1>
+                    <form className='formAgenda' id='formAgendaEditar' onSubmit={salvar}>
+                        <div>
+                            <label htmlFor='agendaDescricao'>Descrição:</label>
+                            <input
+                                id='agendaDescricao'
+                                type='text'
+                                name='descricao'
+                                value={agendas.descricao || ''}
+                                onChange={(e) => setAgendas({ ...agendas, descricao: e.target.value })}
+                                required/>
                         </div>
-                    </div>
-                </div>
-            )
-        }
-        if (params.Criar) {
-            return (
-                <div className='ContainerCardAgenda' onClick={onClose}>
-                    <div className='CardAgenda' onClick={(e) => e.stopPropagation()} >
-                        <div className='containerFormAgenda'>
-                            <h1 className='tituloFormAgenda'>Criar a agenda</h1>
-                            <form className='formAgenda' id='formAgendaEditar' onSubmit={criarAgenda}>
-                                <div>
-                                    <label>Descrição:</label>
-                                    <input 
-                                        type='text' 
-                                        name='descricao'
-                                        value={agendas?.descricao || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, descricao: e.target.value })} 
-                                        required/>
-                                </div>
-                                <div>
-                                    <label>Cliente:</label>
-                                    <select 
-                                        name='clienteId'
-                                        value={agendas?.clienteId || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, clienteId: Number(e.target.value) })} 
-                                        required>
-                                        <option value='' disabled>Selecione</option>
-                                        {clientes.map((item) => (
-                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Profissional:</label>
-                                    <select 
-                                        name='funcionarioId'
-                                        value={agendas?.funcionarioId || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, funcionarioId: Number(e.target.value) })} 
-                                        required>
-                                        <option value='' disabled>Selecione</option>
-                                        {funcionarios.map((item) => (
-                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Início da agenda:</label>
-                                    <input 
-                                        type='datetime-local' 
-                                        name='horaInicio'
-                                        value={agendas?.horaInicio? formatarDataLocal(new Date(agendas.horaInicio)) : ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, horaInicio: e.target.value ? new Date(e.target.value) : null })} 
-                                        required/>
-                                </div>
-                                <div>
-                                    <label>Fim da agenda:</label>
-                                    <input 
-                                        type='datetime-local' 
-                                        name='horaFim'
-                                        value={agendas?.horaFim? formatarDataLocal(new Date(agendas.horaFim)) : ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, horaFim: e.target.value ? new Date(e.target.value) : null })} 
-                                        required/>
-                                </div>
-                                <div>
-                                    <label>Tipo de agenda:</label>
-                                    <select 
-                                        name='tipoAgendaId'
-                                        value={agendas?.tipoAgendaId || ''} 
-                                        onChange={(e) => setAgendas({ ...agendas!, tipoAgendaId: Number(e.target.value) })} 
-                                        required>
-                                        <option value='' disabled>Selecione</option>
-                                        {tipos.map((item) => (
-                                            <option key={item.id} value={item.id!}>{item.id} - {item.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <button type='submit' className='botaoForm'>Salvar</button>
-                            </form>
+                        <CampoBusca
+                            id='agendaCliente'
+                            label='Cliente:'
+                            placeholder='Nome do cliente'
+                            selecionado={nomeCliente}
+                            buscar={buscarClientes}
+                            onSelecionar={(item) => setAgendas({ ...agendas, clienteId: item.id })}/>
+                        <CampoBusca
+                            id='agendaProfissional'
+                            label='Profissional:'
+                            placeholder='Atuação (ex.: barbeiro)'
+                            selecionado={nomeProfissional}
+                            buscar={buscarProfissionais}
+                            onSelecionar={escolherProfissional}/>
+                        <div>
+                            <label htmlFor='agendaInicio'>Início da agenda:</label>
+                            <input
+                                id='agendaInicio'
+                                type='datetime-local'
+                                name='horaInicio'
+                                value={agendas.horaInicio ? formatarDataLocal(new Date(agendas.horaInicio)) : ''}
+                                onChange={(e) => setAgendas({ ...agendas, horaInicio: e.target.value ? new Date(e.target.value) : null })}
+                                required/>
                         </div>
-                    </div>
+                        <div>
+                            <label htmlFor='agendaFim'>Fim da agenda:</label>
+                            <input
+                                id='agendaFim'
+                                type='datetime-local'
+                                name='horaFim'
+                                value={agendas.horaFim ? formatarDataLocal(new Date(agendas.horaFim)) : ''}
+                                onChange={(e) => setAgendas({ ...agendas, horaFim: e.target.value ? new Date(e.target.value) : null })}
+                                required/>
+                        </div>
+                        <p role='alert' className='mensagemCadastro'>{erro}</p>
+                        <button type='submit' className='botaoForm'>Salvar</button>
+                    </form>
                 </div>
-            )
-        }
-    }
-    return null
+            </div>
+        </div>
+    )
 }

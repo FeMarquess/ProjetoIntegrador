@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 import { api } from '@/src/services/api';
 import { Cliente } from '@/src/types/cliente';
+import { mascaraTelefone } from '@/src/utils/telefone';
 
 const clienteVazio: Cliente = { id: null, descricao: '', telefone: '', dataNascimento: '' }
 
@@ -11,14 +12,18 @@ export default function Clientes() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [cliente, setCliente] = useState<Cliente>(clienteVazio)
   const [mensagem, setMensagem] = useState('')
+  const [busca, setBusca] = useState('')
 
   useEffect(() => {
-    carregar()
-  }, [])
+    const espera = setTimeout(carregar, 300)
+    return () => clearTimeout(espera)
+  }, [busca])
 
   async function carregar() {
     try {
-      const res = await api.get('/clienteBuscar')
+      const res = busca
+        ? await api.get('/clienteBuscarNome', { params: { descricao: busca } })
+        : await api.get('/clienteBuscar')
       setClientes(res.data as Cliente[])
     } catch (error) {
       console.error(error)
@@ -57,7 +62,7 @@ export default function Clientes() {
     setMensagem('')
     setCliente({
       ...c,
-      telefone: c.telefone || '',
+      telefone: mascaraTelefone(c.telefone || ''),
       dataNascimento: c.dataNascimento ? c.dataNascimento.split('T')[0] : ''
     })
   }
@@ -83,7 +88,8 @@ export default function Clientes() {
               id='telefone'
               type='tel'
               value={cliente.telefone || ''}
-              onChange={(e) => setCliente({ ...cliente, telefone: e.target.value })}/>
+              placeholder='(19) 99999-9999'
+              onChange={(e) => setCliente({ ...cliente, telefone: mascaraTelefone(e.target.value) })}/>
           </div>
           <div>
             <label htmlFor='dataNascimento'>Data de nascimento:</label>
@@ -102,6 +108,17 @@ export default function Clientes() {
         </form>
       </div>
 
+      <div className='containerCadastro'>
+        <input
+          type='search'
+          className='buscaLista'
+          aria-label='Pesquisar cliente pelo nome'
+          placeholder='Pesquisar cliente pelo nome'
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}/>
+      </div>
+      {clientes.length === 0 && <p className='titulo'>Nenhum cliente encontrado</p>}
+
       <div className='containerAgendaDia'>
         {clientes.map((c) => (
           <div className='agendaDia' key={c.id}>
@@ -111,7 +128,7 @@ export default function Clientes() {
             </div>
             <div className='containerCondeudo'>
               <h1>#{c.id} {c.descricao}</h1>
-              <h2>Telefone: {c.telefone}</h2>
+              <h2>Telefone: {mascaraTelefone(c.telefone || '')}</h2>
               <h2>Nascimento: {c.dataNascimento ? c.dataNascimento.split('T')[0].split('-').reverse().join('/') : ''}</h2>
             </div>
           </div>
