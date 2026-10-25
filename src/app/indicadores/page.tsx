@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/src/services/api';
 import GraficoBarras from '@/src/components/GraficoBarras';
+import GraficoLinha from '@/src/components/GraficoLinha';
 
 interface ServicoIndicador {
   id: number
@@ -15,6 +16,19 @@ interface Indicadores {
   totalAtendimentos: number
   servicos: ServicoIndicador[]
   faixas: { faixa: string, total: number }[]
+  // agendamentos ainda não concluídos por dia (AAAA-MM-DD), de hoje em diante
+  proximosDias: { data: string, total: number }[]
+}
+
+function pontoDoDia(dia: { data: string, total: number }) {
+  const data = new Date(`${dia.data}T00:00:00`)
+  const semana = data.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
+  const diaMes = data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  return {
+    rotulo: `${semana} ${diaMes}`,
+    rotuloLongo: `${data.toLocaleDateString('pt-BR', { weekday: 'long' })}, ${diaMes}`,
+    valor: dia.total
+  }
 }
 
 export default function PaginaIndicadores() {
@@ -54,13 +68,20 @@ export default function PaginaIndicadores() {
         <div className='blocoResumo'>
           <span className='rotuloResumo'>Serviço mais procurado</span>
           <span className='numeroResumo'>{maisProcurado?.descricao || '—'}</span>
-          {maisProcurado && <span className='detalheResumo'>{maisProcurado.total} atendimentos · {percentual(maisProcurado.total)}</span>}
+          {maisProcurado && <span className='detalheResumo'>{maisProcurado.total} atendimento{maisProcurado.total === 1 ? '' : 's'} · {percentual(maisProcurado.total)}</span>}
         </div>
         <div className='blocoResumo'>
           <span className='rotuloResumo'>Faixa etária que mais procurou</span>
           <span className='numeroResumo'>{faixaTop?.total ? faixaTop.faixa : '—'}</span>
-          {faixaTop?.total ? <span className='detalheResumo'>{faixaTop.total} atendimentos</span> : null}
+          {faixaTop?.total ? <span className='detalheResumo'>{faixaTop.total} atendimento{faixaTop.total === 1 ? '' : 's'}</span> : null}
         </div>
+      </section>
+
+      <section className='graficoLargo'>
+        <GraficoLinha
+          titulo={`Próximos agendamentos por dia (${indicadores.proximosDias.reduce((soma, d) => soma + d.total, 0)} nos próximos ${indicadores.proximosDias.length} dias)`}
+          pontos={indicadores.proximosDias.map(pontoDoDia)}
+          formatar={(v) => `${v} agendamento${v === 1 ? '' : 's'}`}/>
       </section>
 
       <div className='gradeGraficos'>

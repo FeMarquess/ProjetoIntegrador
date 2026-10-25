@@ -232,7 +232,7 @@ export function Modal({ params, onClose, agenda, dataInicial }: props,) {
                             key={`profissional-${etapas.length}`}
                             id='agendaProfissional'
                             label='Profissional:'
-                            placeholder='Atuação (ex.: barbeiro)'
+                            placeholder='Nome ou atuação (ex.: barbeiro)'
                             selecionado={nomeProfissional}
                             buscar={buscarProfissionais}
                             onSelecionar={escolherProfissional}/>

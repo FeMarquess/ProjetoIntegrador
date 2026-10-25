@@ -55,6 +55,9 @@ export default function eventos() {
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
+        // preenche a altura do contêiner; dias com muitos agendamentos mostram "+N mais"
+        height="100%"
+        dayMaxEvents={true}
 
         events={eventos}
 

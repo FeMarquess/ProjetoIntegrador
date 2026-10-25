@@ -97,9 +97,15 @@ export default function PainelProfissional() {
   }
 
   async function mudarStatus(rota: '/agendaIniciar' | '/agendaConcluir', id: number) {
-    const res = await api.put(rota, null, { params: { id: id } })
-    // a API devolve texto quando a ação não é permitida
-    setMensagem(typeof res.data === 'string' ? res.data : '')
+    try {
+      // corpo vazio em JSON: sem corpo o Fastify recusa o PUT com 415
+      const res = await api.put(rota, {}, { params: { id: id } })
+      // a API devolve texto quando a ação não é permitida
+      setMensagem(typeof res.data === 'string' ? res.data : '')
+    } catch (error) {
+      console.error(error)
+      setMensagem('Não foi possível atualizar o atendimento. Tente de novo.')
+    }
     carregar()
   }
 
