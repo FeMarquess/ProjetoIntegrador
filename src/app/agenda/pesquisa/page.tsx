@@ -82,9 +82,9 @@ console.log(eventos)
             </div>
             <div className='containerCondeudo'>
               <h1>Nome do apontamento: {agenda.descricao}</h1>
-              <h2>Tipo de apontamento: {agenda.tipoAgendaId}</h2>
-              <h2>Funcionaria: {agenda.funcionarioId}</h2>
-              <h2>Cliente: {agenda.clienteId}</h2>
+              <h2>Serviço: #{agenda.tipoAgendaId} {agenda.tipoAgenda?.descricao}</h2>
+              <h2>Profissional: #{agenda.funcionarioId} {agenda.funcionario?.descricao}</h2>
+              <h2>Cliente: #{agenda.clienteId} {agenda.cliente?.descricao}</h2>
               <h2>Começo: {
                     agenda.horaInicio
                       ? new Date(agenda.horaInicio).toLocaleString('pt-BR')

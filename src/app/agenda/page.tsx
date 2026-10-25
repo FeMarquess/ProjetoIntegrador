@@ -32,7 +32,10 @@ export default function eventos() {
             end: agenda.horaFim!,
             properties:{
               clienteId: agenda.clienteId,
-              funcionarioId: agenda.funcionarioId
+              cliente: agenda.cliente?.descricao,
+              funcionarioId: agenda.funcionarioId,
+              funcionario: agenda.funcionario?.descricao,
+              status: agenda.tipoAgenda?.descricao
             }
           };
         });

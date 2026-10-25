@@ -80,9 +80,9 @@ const fecharModal = () => {
         </div>          
             <div className='containerCondeudo'>
               <h1>Nome do apontamento: {evento.descricao}</h1>
-              <h2>Tipo de apontamento: {evento.tipoAgendaId}</h2>
-              <h2>Funcionaria: {evento.funcionarioId}</h2>
-              <h2>Cliente: {evento.clienteId}</h2>
+              <h2>Serviço: #{evento.tipoAgendaId} {evento.tipoAgenda?.descricao}</h2>
+              <h2>Profissional: #{evento.funcionarioId} {evento.funcionario?.descricao}</h2>
+              <h2>Cliente: #{evento.clienteId} {evento.cliente?.descricao}</h2>
               <h2>Começo: {
                     evento.horaInicio
                       ? new Date(evento.horaInicio).toLocaleString('pt-BR')

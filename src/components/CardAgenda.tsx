@@ -99,6 +99,9 @@ export function Modal({ params, onClose, agenda }: props,) {
 
         if (!agendas?.clienteId) return setErro('Pesquise e selecione um cliente')
         if (!agendas?.funcionarioId) return setErro('Pesquise e selecione uma profissional')
+        if (agendas.horaInicio && agendas.horaFim && new Date(agendas.horaFim) <= new Date(agendas.horaInicio)) {
+            return setErro('O fim da agenda deve ser depois do início')
+        }
 
         const dados = {
             descricao: agendas.descricao,
@@ -109,11 +112,12 @@ export function Modal({ params, onClose, agenda }: props,) {
             horaFim: agendas.horaFim
         }
 
-        if (params.Editar) {
-            await api.put('/alterarAgenda', dados, { params: { id: agendas.id } })
-        } else {
-            await api.post('/agenda', dados)
-        }
+        const res = params.Editar
+            ? await api.put('/alterarAgenda', dados, { params: { id: agendas.id } })
+            : await api.post('/agenda', dados)
+
+        // a API devolve texto quando recusa a agenda
+        if (typeof res.data === 'string' && res.data !== 'Sucesso ao alterar') return setErro(res.data)
 
         onClose()
     }
