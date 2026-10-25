@@ -19,6 +19,8 @@ const Navbar = () => {
   // a pesquisa da navbar busca agendas; nas telas de cadastro cada uma tem a sua própria busca
   const pathname = usePathname()
   const mostrarPesquisa = pathname === '/' || pathname.startsWith('/agenda')
+  // na lista de um dia (/agenda/AAAA-MM-DD) o novo agendamento já vem com essa data
+  const diaAberto = pathname.match(/^\/agenda\/(\d{4}-\d{2}-\d{2})/)?.[1]
   const [parametrosAgenda, setParametrosAgenda] = useState<IparametrosAgenda>({Editar: false, Criar: false, Aberto: false})
 
     
@@ -50,7 +52,7 @@ const Navbar = () => {
                 </li>
             </ul>
         </nav>
-                <Modal params = {parametrosAgenda} onClose = {fecharModal}/>
+                <Modal params = {parametrosAgenda} onClose = {fecharModal} dataInicial={diaAberto}/>
         </div>
     )
 
