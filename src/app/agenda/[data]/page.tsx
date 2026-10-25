@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 import { api } from '@/src/services/api';
-import { Modal } from '@/src/components/CardAgenda';
+import { rotuloStatus, classeStatus } from '@/src/utils/status';
+import { Modal, EVENTO_AGENDA_ALTERADA } from '@/src/components/CardAgenda';
 
 interface IparametrosAgenda{
   Editar: boolean,
@@ -24,6 +25,8 @@ console.log('[data]')
 
 useEffect(() => {
   carregar();
+  window.addEventListener(EVENTO_AGENDA_ALTERADA, carregar)
+  return () => window.removeEventListener(EVENTO_AGENDA_ALTERADA, carregar)
 }, [dataParam]) 
 
     if (!dataParam) return
@@ -79,6 +82,7 @@ useEffect(() => {
             </div>
             <div className='containerCondeudo'>
               <h1>Nome do apontamento: {agenda.descricao}</h1>
+              <span className={classeStatus(agenda.status)}>{rotuloStatus[agenda.status || 'agendado']}</span>
               <h2>Serviço: #{agenda.tipoAgendaId} {agenda.tipoAgenda?.descricao}</h2>
               <h2>Profissional: #{agenda.funcionarioId} {agenda.funcionario?.descricao}</h2>
               <h2>Cliente: #{agenda.clienteId} {agenda.cliente?.descricao}</h2>

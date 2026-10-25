@@ -5,6 +5,7 @@ import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { api } from '@/src/services/api';
+import { rotuloStatus, classeStatus } from '@/src/utils/status';
 import { Modal } from '@/src/components/CardAgenda';
 
 export default function AgendaPesquisada () {
@@ -82,6 +83,7 @@ console.log(eventos)
             </div>
             <div className='containerCondeudo'>
               <h1>Nome do apontamento: {agenda.descricao}</h1>
+              <span className={classeStatus(agenda.status)}>{rotuloStatus[agenda.status || 'agendado']}</span>
               <h2>Serviço: #{agenda.tipoAgendaId} {agenda.tipoAgenda?.descricao}</h2>
               <h2>Profissional: #{agenda.funcionarioId} {agenda.funcionario?.descricao}</h2>
               <h2>Cliente: #{agenda.clienteId} {agenda.cliente?.descricao}</h2>

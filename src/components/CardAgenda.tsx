@@ -32,6 +32,11 @@ const agendaVazia: Agenda = {
     horaFim: null
 }
 
+// avisa as telas abertas (calendário, lista do dia, home) para recarregarem
+export const EVENTO_AGENDA_ALTERADA = 'agendaAlterada'
+
+const hora = (data: Date | null) => data ? new Date(data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''
+
 const textoCliente = (c: Cliente) => `#${c.id} ${c.descricao}`
 const textoProfissional = (f: Funcionario, especialidade: string) => `#${f.id} ${f.descricao} — ${especialidade}`
 
@@ -48,13 +53,17 @@ export function Modal({ params, onClose, agenda }: props,) {
     const [nomeProfissional, setNomeProfissional] = useState('')
     const [profissionais, setProfissionais] = useState<FuncionarioEspecialidade[]>([])
     const [erro, setErro] = useState('')
+    // etapas já salvas nesta visita, ao usar "Salvar e adicionar próxima etapa"
+    const [etapas, setEtapas] = useState<string[]>([])
 
     useEffect(() => {
         setErro('')
+        setEtapas([])
         if (!params.Aberto) {
             setAgendas(null)
             return
         }
+
 
         if (params.Criar) {
             setAgendas(agendaVazia)
@@ -96,6 +105,8 @@ export function Modal({ params, onClose, agenda }: props,) {
 
     async function salvar(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        // qual botão enviou o formulário
+        const continuar = (e.nativeEvent as SubmitEvent).submitter?.getAttribute('name') === 'continuar'
 
         if (!agendas?.clienteId) return setErro('Pesquise e selecione um cliente')
         if (!agendas?.funcionarioId) return setErro('Pesquise e selecione uma profissional')
@@ -119,6 +130,18 @@ export function Modal({ params, onClose, agenda }: props,) {
         // a API devolve texto quando recusa a agenda
         if (typeof res.data === 'string' && res.data !== 'Sucesso ao alterar') return setErro(res.data)
 
+        window.dispatchEvent(new Event(EVENTO_AGENDA_ALTERADA))
+
+        if (continuar) {
+            // próxima etapa da mesma visita: mantém descrição e cliente, começa quando a anterior termina
+            const salva = res.data as Agenda
+            setEtapas([...etapas, `${hora(agendas.horaInicio)}–${hora(agendas.horaFim)} ${salva.tipoAgenda?.descricao || ''} com ${salva.funcionario?.descricao || ''}`])
+            setAgendas({ ...agendas, id: 0, funcionarioId: 0, tipoAgendaId: 0, horaInicio: agendas.horaFim, horaFim: null })
+            setNomeProfissional('')
+            setErro('')
+            return
+        }
+
         onClose()
     }
 
@@ -138,7 +161,7 @@ export function Modal({ params, onClose, agenda }: props,) {
         <div className='ContainerCardAgenda' onClick={onClose}>
             <div className='CardAgenda' onClick={(e) => e.stopPropagation()} >
                 <div className='containerFormAgenda'>
-                    <h1 className='tituloFormAgenda'>{params.Editar ? 'Editar a agenda' : 'Criar a agenda'}</h1>
+                    <h1 className='tituloFormAgenda'>{params.Editar ? 'Editar a agenda' : etapas.length ? `Etapa ${etapas.length + 1} da visita` : 'Criar a agenda'}</h1>
                     <form className='formAgenda' id='formAgendaEditar' onSubmit={salvar}>
                         <div>
                             <label htmlFor='agendaDescricao'>Descrição:</label>
@@ -158,6 +181,8 @@ export function Modal({ params, onClose, agenda }: props,) {
                             buscar={buscarClientes}
                             onSelecionar={(item) => setAgendas({ ...agendas, clienteId: item.id })}/>
                         <CampoBusca
+                            // nova etapa recria o campo, limpando a profissional anterior
+                            key={`profissional-${etapas.length}`}
                             id='agendaProfissional'
                             label='Profissional:'
                             placeholder='Atuação (ex.: barbeiro)'
@@ -185,7 +210,21 @@ export function Modal({ params, onClose, agenda }: props,) {
                                 required/>
                         </div>
                         <p role='alert' className='mensagemCadastro'>{erro}</p>
-                        <button type='submit' className='botaoForm'>Salvar</button>
+                        {etapas.length > 0 && (
+                            <div className='etapasVisita' role='status'>
+                                <strong>Etapas já agendadas nesta visita:</strong>
+                                <ol>
+                                    {etapas.map((etapa, i) => <li key={i}>{etapa}</li>)}
+                                </ol>
+                                <span>Adicione a etapa {etapas.length + 1} ou clique em Salvar para terminar.</span>
+                            </div>
+                        )}
+                        <div className='botoesModal'>
+                            <button type='submit' name='salvar' className='botaoForm'>Salvar</button>
+                            {params.Criar && (
+                                <button type='submit' name='continuar' className='botaoForm botaoDestaque'>Salvar e adicionar próxima etapa</button>
+                            )}
+                        </div>
                     </form>
                 </div>
             </div>

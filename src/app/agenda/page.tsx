@@ -7,6 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { api } from '@/src/services/api';
 import '../globals.css'
 import { useRouter } from 'next/navigation';
+import { EVENTO_AGENDA_ALTERADA } from '@/src/components/CardAgenda';
 import { Evento } from '@/src/types/eventos';
 import { Agenda } from '@/src/types/agenda';
 
@@ -17,6 +18,9 @@ export default function eventos() {
 
   useEffect(() => {
     carregar();
+    // recarrega quando uma agenda é criada ou editada no modal da navbar
+    window.addEventListener(EVENTO_AGENDA_ALTERADA, carregar)
+    return () => window.removeEventListener(EVENTO_AGENDA_ALTERADA, carregar)
   }, []);
   async function carregar() {
       try {

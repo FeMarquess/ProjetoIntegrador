@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@/src/services/api';
+import { rotuloStatus, classeStatus } from '@/src/utils/status';
 import { Agenda } from '@/src/types/agenda';
 import { Modal } from '@/src/components/CardAgenda';
 
@@ -80,6 +81,7 @@ const fecharModal = () => {
         </div>          
             <div className='containerCondeudo'>
               <h1>Nome do apontamento: {evento.descricao}</h1>
+              <span className={classeStatus(evento.status)}>{rotuloStatus[evento.status || 'agendado']}</span>
               <h2>Serviço: #{evento.tipoAgendaId} {evento.tipoAgenda?.descricao}</h2>
               <h2>Profissional: #{evento.funcionarioId} {evento.funcionario?.descricao}</h2>
               <h2>Cliente: #{evento.clienteId} {evento.cliente?.descricao}</h2>

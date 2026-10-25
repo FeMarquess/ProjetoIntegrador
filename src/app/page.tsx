@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserPlus, faCalendar, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { faUserPlus, faCalendar, faUserTie, faClipboardList, faChartBar } from '@fortawesome/free-solid-svg-icons';
 import { api } from '@/src/services/api';
 import { Agenda } from '@/src/types/agenda';
 import { Cliente } from '@/src/types/cliente';
 import { Funcionario } from '@/src/types/funcionario';
 import { TipoAgenda } from '@/src/types/tipoAgenda';
+import { rotuloStatus, classeStatus } from '@/src/utils/status';
+import { EVENTO_AGENDA_ALTERADA } from '@/src/components/CardAgenda';
 
 function hojeLocal() {
   const d = new Date()
@@ -28,6 +30,13 @@ export default function Home() {
 
   useEffect(() => {
     carregar()
+    // atualiza sozinho para acompanhar a triagem
+    const intervalo = setInterval(carregar, 15000)
+    window.addEventListener(EVENTO_AGENDA_ALTERADA, carregar)
+    return () => {
+      clearInterval(intervalo)
+      window.removeEventListener(EVENTO_AGENDA_ALTERADA, carregar)
+    }
   }, [])
 
   async function carregar() {
@@ -58,6 +67,8 @@ export default function Home() {
         <Link href='/clientes' className='botaoHome'><FontAwesomeIcon icon={faUserPlus} /> Cadastrar cliente</Link>
         <Link href='/profissionais' className='botaoHome'><FontAwesomeIcon icon={faUserTie} /> Cadastrar profissional</Link>
         <Link href='/agenda' className='botaoHome'><FontAwesomeIcon icon={faCalendar} /> Ver agenda</Link>
+        <Link href='/painel' className='botaoHome'><FontAwesomeIcon icon={faClipboardList} /> Painel da profissional</Link>
+        <Link href='/indicadores' className='botaoHome'><FontAwesomeIcon icon={faChartBar} /> Indicadores</Link>
       </nav>
 
       <section className='painel' aria-label='Atendimentos de hoje'>
@@ -76,6 +87,7 @@ export default function Home() {
                     <Link href={`/agenda/evento/${a.id}?id=${a.id}`} className='itemPainel' key={a.id}>
                       <strong>{hora(a.horaInicio)} – {hora(a.horaFim)}</strong>
                       <span>{nomeTipo(a.tipoAgendaId)} · {nomeCliente(a.clienteId)}</span>
+                      <span className={classeStatus(a.status)}>{rotuloStatus[a.status || 'agendado']}</span>
                     </Link>
                   ))}
               </div>
