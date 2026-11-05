@@ -34,9 +34,38 @@ body {
   background: #171717;
 }
 
+.Navbar{
+  gap: 12px;
+}
+
 .NavbarLista{
   display: inline-flex;
+  flex-shrink: 0;
   padding-right: 10px;
+}
+
+.pesquisaNav{
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
+}
+
+.formPesquisa{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.formPesquisa input{
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0px 10px;
+}
+
+.formPesquisa button{
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .itemNav{
@@ -45,6 +74,24 @@ body {
 
 .fc{
   height: 100%;
+}
+
+.fc .fc-toolbar{
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fc .fc-toolbar-title{
+  font-size: clamp(1.15rem, 4vw, 1.75rem);
+}
+
+/* "novembro de 2026" -> "Novembro de 2026" */
+.fc .fc-toolbar-title::first-letter{
+  text-transform: uppercase;
+}
+
+.fc .fc-daygrid-event{
+  overflow: hidden;
 }
 
 .fc-day-today {
@@ -111,24 +158,26 @@ body {
   display: grid;
   gap: 16px;
   align-items: stretch;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
   margin: 0px 50px 30px 50px;
 }
 
 .containerAgendaUnica{
   display: flex;
-  align-content: center;
   justify-content: center;
-  align-items: center;
-  grid-template-columns: repeat(4, 1fr);
+  padding: 20px 16px;
+}
+
+.containerAgendaUnica .agendaDia{
+  width: min(100%, 520px);
 }
 
 .agendaDia{
   display: flex;
   flex-direction: column;
   min-height: 24vh;
-  padding: 20px 30px;
-  margin: 10px;
+  padding: 20px 24px;
+  margin: 0px;
   border: 1px solid;
   border-radius: 15px;
   border-color: #ffffff;
@@ -188,8 +237,9 @@ body {
   display: grid;
   justify-content: center;
   align-items: center;
-  height: 25h;
-  width: 35vw;
+  width: min(92vw, 520px);
+  max-height: 92dvh;
+  overflow-y: auto;
   padding-top: 20px;
   border-radius: 20px;
   background-color: #2c2c2c;
@@ -241,6 +291,8 @@ input[type="datetime-local"]:-moz-focusring {
 .formAgenda input,
 .formAgenda select{
   width: 14rem;
+  min-width: 0;
+  min-height: 30px;
 }
 
 .formAgenda select{
@@ -255,14 +307,20 @@ input[type="datetime-local"]:-moz-focusring {
   flex-wrap: wrap;
   justify-content: center;
   gap: 16px;
-  margin: 10px 20px 30px 20px;
+  max-width: 1280px;
+  margin: 10px auto 30px auto;
+  padding: 0px 50px;
 }
 
 .botaoHome{
   display: flex;
+  flex: 1 1 0;
+  min-width: max-content;
+  white-space: nowrap;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 14px 24px;
+  padding: 14px 18px;
   border-radius: 12px;
   background-color: #2c2c2c;
   font-size: large;
@@ -312,12 +370,13 @@ input[type="datetime-local"]:-moz-focusring {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
+  padding: 0px 16px;
 }
 
 .formCadastro{
   border-radius: 20px;
   background-color: #2c2c2c;
-  min-width: 360px;
+  width: min(100%, 500px);
 }
 
 .mensagemCadastro{
@@ -377,7 +436,8 @@ input[type="datetime-local"]:-moz-focusring {
   width: fit-content;
   margin: 4px 0px;
   padding: 1px 8px;
-  border-radius: 999px;
+  /* pílula numa linha; cantos arredondados quando o texto quebra */
+  border-radius: 0.8em;
   font-size: small;
   font-weight: bold;
   border: 1px solid #171717;
@@ -468,10 +528,11 @@ input[type="datetime-local"]:-moz-focusring {
 .gradeGraficos{
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
 }
 
 .grafico{
+  min-width: 0;
   margin: 0px;
   padding: 16px;
   border-radius: 12px;
@@ -740,4 +801,342 @@ input[type="datetime-local"]:-moz-focusring {
   white-space: nowrap;
   pointer-events: none;
   box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+/* Profissional com várias especialidades */
+.formAgenda fieldset.listaEspecialidades{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 3px;
+  padding: 6px 10px;
+  border: 1px solid #474747;
+  border-radius: 8px;
+  max-width: 22rem;
+}
+.listaEspecialidades legend{
+  padding: 0 4px;
+}
+.formAgenda .listaEspecialidades label{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.formAgenda .listaEspecialidades input{
+  width: auto;
+  margin: 0;
+  accent-color: #1baf7a;
+}
+
+/* Histórico de procedimentos da cliente */
+.botaoHistorico{
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background-color: #171717;
+  color: #ededed;
+  cursor: pointer;
+  font-size: small;
+}
+.historicoCliente{
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: #383838;
+  /* o card é claro com texto escuro; aqui o fundo é escuro */
+  color: #ededed;
+  font-size: small;
+  text-align: left;
+}
+.historicoCliente ol{
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+.historicoCliente li{
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  padding-top: 6px;
+  border-top: 1px solid #474747;
+}
+
+/* Painel: ativar notificações do navegador */
+.barraPainel .botaoNotificacao{
+  font-size: small;
+}
+
+/* Mensagem de lista vazia nas telas da agenda */
+.semEventos{
+  text-align: center;
+  margin: 24px 16px;
+  color: #c3c2b7;
+}
+
+/* ---------- Celular ---------- */
+@media (max-width: 640px){
+  .Navbar{
+    gap: 8px;
+  }
+  .NavbarLista{
+    padding-right: 0px;
+  }
+  .itemNav{
+    padding-left: 12px;
+  }
+
+  .calendario{
+    padding: 8px;
+  }
+  .fc .fc-toolbar.fc-header-toolbar{
+    margin-bottom: 8px;
+  }
+  .fc .fc-daygrid-event{
+    font-size: 0.7rem;
+  }
+
+  /* listas de cards, painel do dia e indicadores usam a largura toda */
+  .containerAgendaDia,
+  .painel{
+    margin: 0px 16px 24px 16px;
+  }
+  .paginaIndicadores{
+    padding: 0px 16px 24px 16px;
+  }
+  .agendaDia{
+    min-height: auto;
+    padding: 16px 18px;
+  }
+
+  .botoesHome{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 0px 16px;
+  }
+  .botaoHome{
+    padding: 12px 16px;
+  }
+
+  /* formulários: rótulo em cima, campo na largura toda */
+  .formAgenda{
+    padding: 16px;
+    margin-top: 0px;
+  }
+  .formAgenda div,
+  .campoBusca{
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .formAgenda input,
+  .formAgenda select{
+    flex: 1 1 100%;
+    width: 100%;
+    margin-left: 0px;
+  }
+  .formAgenda .listaEspecialidades input{
+    flex: none;
+    width: auto;
+  }
+  .formAgenda .campoBuscaInput{
+    width: 100%;
+    margin: 0px;
+  }
+  .resultadosBusca{
+    width: 100%;
+  }
+  .campoComAtalhos{
+    width: 100%;
+  }
+
+  .linhaBarra{
+    grid-template-columns: 6.5rem 1fr;
+  }
+  .tooltipBarra{
+    left: 7rem;
+  }
+}
+
+/* Painel: avisos vazios não deixam um vão entre os controles e os cards */
+.barraPainel ~ .mensagemCadastro:empty{
+  min-height: 0px;
+  margin: 0px;
+}
+.barraPainel{
+  margin-bottom: 12px;
+}
+
+/* Confirmação de exclusão dentro do card */
+.confirmarExclusao{
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background-color: #171717;
+  color: #ededed;
+}
+.botoesConfirmar{
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.botaoConfirmarCancelar,
+.botaoConfirmarExcluir{
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.botaoConfirmarCancelar:hover{
+  background-color: #474747;
+}
+.botaoConfirmarExcluir{
+  background-color: #f0efec;
+  color: #171717;
+}
+
+/* Cards de agendamento enxutos */
+.tituloAgenda{
+  font-weight: bold;
+}
+.dataAgenda{
+  color: #474747;
+  font-size: small;
+  text-transform: capitalize;
+}
+.notaAgenda{
+  color: #474747;
+  font-size: small;
+  font-style: italic;
+}
+
+/* Cliente: idade e telefone */
+.nomeCard{
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+.detalheCard{
+  color: #474747;
+}
+.telefoneCard{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background-color: #171717;
+  color: #ededed;
+  font-size: small;
+}
+
+/* Lista vazia com atalho */
+.listaVazia{
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin: 48px 16px;
+  text-align: center;
+  color: #c3c2b7;
+}
+.listaVazia svg{
+  height: 2rem;
+  opacity: 0.6;
+}
+
+/* Painel do dia: ver por / mostrar */
+.cabecalhoPainel{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px 24px;
+  margin-bottom: 14px;
+}
+.cabecalhoPainel .tituloPainel{
+  margin-bottom: 0px;
+}
+.filtrosPainel{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+}
+.filtrosPainel .atalhos{
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filtrosPainel .atalho{
+  padding: 3px 12px;
+}
+.rotuloFiltro{
+  color: #c3c2b7;
+  font-size: small;
+  margin-right: 2px;
+}
+
+/* Painel do dia: visita de cada cliente em sequência */
+.listaVisitas{
+  display: grid;
+  gap: 12px;
+}
+.visitaPainel{
+  padding: 12px;
+  border-radius: 12px;
+  background-color: #2c2c2c;
+}
+.cabecalhoVisita{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+.cabecalhoVisita h3{
+  font-weight: bold;
+}
+.cabecalhoVisita span{
+  color: #c3c2b7;
+  font-size: small;
+}
+.cadeiaVisita{
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  /* espaço para o contorno verde da etapa liberada não ser cortado */
+  padding: 4px;
+}
+.etapaCadeia{
+  flex: 0 0 200px;
+}
+.etapaCadeia .itemPainel{
+  height: 100%;
+  margin-bottom: 0px;
+}
+.setaVisita{
+  display: flex;
+  align-items: center;
+  color: #c3c2b7;
+  font-size: 1.2rem;
+}
+
+@media (max-width: 640px){
+  .cadeiaVisita{
+    flex-direction: column;
+    overflow-x: visible;
+  }
+  .etapaCadeia{
+    flex: none;
+  }
+  .setaVisita{
+    justify-content: center;
+    transform: rotate(90deg);
+    height: 14px;
+  }
+  .filtrosPainel .atalhos{
+    justify-content: flex-start !important;
+  }
 }

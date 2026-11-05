@@ -9,6 +9,9 @@ interface ServicoIndicador {
   descricao: string
   total: number
   idadeMedia: number | null
+  // minutos: tempo combinado na agenda x tempo real entre Iniciar e Concluir no painel
+  duracaoPrevistaMedia: number | null
+  duracaoRealMedia: number | null
   profissionais: { id: number, descricao: string, total: number }[]
 }
 
@@ -54,6 +57,7 @@ export default function PaginaIndicadores() {
   const faixaTop = [...indicadores.faixas].sort((a, b) => b.total - a.total)[0]
   const servicoSelecionado = indicadores.servicos.find((s) => s.id === servicoId)
   const comIdade = indicadores.servicos.filter((s) => s.idadeMedia !== null)
+  const comTempoReal = indicadores.servicos.filter((s) => s.duracaoRealMedia !== null)
 
   return (
     <div className='paginaIndicadores'>
@@ -114,6 +118,15 @@ export default function PaginaIndicadores() {
           titulo='Idade média das clientes por serviço'
           itens={comIdade.map((s) => ({ rotulo: s.descricao, valor: s.idadeMedia! }))}
           formatar={(v) => `${v} anos`}/>
+
+        <GraficoBarras
+          titulo='Tempo real médio por serviço (Iniciar → Concluir)'
+          itens={comTempoReal.map((s) => ({ rotulo: s.descricao, valor: s.duracaoRealMedia! }))}
+          formatar={(v) => `${v} min`}
+          detalhe={(item) => {
+            const previsto = comTempoReal.find((s) => s.descricao === item.rotulo)?.duracaoPrevistaMedia
+            return previsto != null ? `previsto ${previsto} min` : ''
+          }}/>
       </div>
     </div>
   )
