@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
-import { api } from '@/src/services/api';
+import { api, mensagemErro } from '@/src/services/api';
 import { TipoAgenda } from '@/src/types/tipoAgenda';
+import ConfirmarExclusao from '@/src/components/ConfirmarExclusao';
 
 const tipoVazio = { id: 0, descricao: '' }
 
@@ -11,10 +12,7 @@ export default function Especialidades() {
   const [tipos, setTipos] = useState<TipoAgenda[]>([])
   const [tipo, setTipo] = useState<TipoAgenda>(tipoVazio)
   const [mensagem, setMensagem] = useState('')
-
-  useEffect(() => {
-    carregar()
-  }, [])
+  const [excluindo, setExcluindo] = useState<number | null>(null)
 
   async function carregar() {
     try {
@@ -22,30 +20,42 @@ export default function Especialidades() {
       setTipos(res.data as TipoAgenda[])
     } catch (error) {
       console.error(error)
+      setMensagem(mensagemErro(error))
     }
   }
+
+  useEffect(() => {
+    carregar()
+  }, [])
 
   async function salvar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     const dados = { descricao: tipo.descricao }
 
-    if (tipo.id) {
-      await api.put('/alterarTipoAgenda', dados, { params: { id: tipo.id } })
-      setMensagem('Especialidade alterada')
-    } else {
-      await api.post('/tipoAgenda', dados)
-      setMensagem('Especialidade cadastrada')
+    try {
+      if (tipo.id) {
+        await api.put('/alterarTipoAgenda', dados, { params: { id: tipo.id } })
+        setMensagem('Especialidade alterada')
+      } else {
+        await api.post('/tipoAgenda', dados)
+        setMensagem('Especialidade cadastrada')
+      }
+      setTipo(tipoVazio)
+      carregar()
+    } catch (error) {
+      setMensagem(mensagemErro(error))
     }
-
-    setTipo(tipoVazio)
-    carregar()
   }
 
   async function deletarTipo(id: number) {
-    const res = await api.delete('/deletarTipoAgenda', { params: { id: id } })
-    // a API devolve texto quando o delete falha (ex.: especialidade em uso)
-    setMensagem(typeof res.data === 'string' ? res.data : 'Especialidade excluída')
+    try {
+      await api.delete('/deletarTipoAgenda', { params: { id: id } })
+      setMensagem('Especialidade excluída')
+    } catch (error) {
+      // ex.: especialidade em uso por uma profissional
+      setMensagem(mensagemErro(error))
+    }
     carregar()
   }
 
@@ -77,10 +87,16 @@ export default function Especialidades() {
           <div className='agendaDia' key={t.id}>
             <div className='botoesCard'>
               <button className='botaoEditar' aria-label={`Editar ${t.descricao}`} onClick={() => { setMensagem(''); setTipo(t) }}><FontAwesomeIcon icon={faPen} /></button>
-              <button className='botaoExcluir' aria-label={`Excluir ${t.descricao}`} onClick={() => deletarTipo(t.id)}><FontAwesomeIcon icon={faTrash} /></button>
+              <button className='botaoExcluir' aria-label={`Excluir ${t.descricao}`} onClick={() => setExcluindo(t.id)}><FontAwesomeIcon icon={faTrash} /></button>
             </div>
             <div className='containerCondeudo'>
-              <h1>#{t.id} {t.descricao}</h1>
+              <h1 className='nomeCard'>{t.descricao}</h1>
+              {excluindo === t.id && (
+                <ConfirmarExclusao
+                  texto={`Excluir a especialidade ${t.descricao}?`}
+                  onCancelar={() => setExcluindo(null)}
+                  onConfirmar={() => { setExcluindo(null); deletarTipo(t.id) }}/>
+              )}
             </div>
           </div>
         ))}

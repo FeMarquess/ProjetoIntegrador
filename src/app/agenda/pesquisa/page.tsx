@@ -1,14 +1,12 @@
 'use client'
 import { Agenda } from '@/src/types/agenda'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { api } from '@/src/services/api';
-import { rotuloStatus, classeStatus } from '@/src/utils/status';
+import { Suspense, useEffect, useState } from 'react'
+import { api, mensagemErro } from '@/src/services/api';
+import CartaoAgenda from '@/src/components/CartaoAgenda';
 import { Modal } from '@/src/components/CardAgenda';
 
-export default function AgendaPesquisada () {
+function AgendaPesquisada () {
   const searchParams = useSearchParams()
   const [eventos, setEventos] = useState<Agenda[]>([])
   const [parametrosAgenda, setParametrosAgenda] = useState({Editar: false, Criar: false, Aberto: false})
@@ -16,38 +14,21 @@ export default function AgendaPesquisada () {
 
   const descricao = searchParams.get('descricao')
 
-  console.log(`termo chegou ${descricao}`)
-
-  useEffect(() => {       
-    carregar()
-  }, [descricao])
-
-async function carregar() {
-  if(descricao)
-  try {
-    console.log(descricao)
-          const res = await api.get('/agendaBuscarNome', {
-            params: { descricao: descricao }
-          })
-          const agendaDia = res.data as Agenda[]
-          console.log(res.data)
-          setEventos(agendaDia)
-        } catch (error) {
-          console.error(error)
-        }
-        else{
-        try{
-          const res = await api.get('/agendaBuscarNome', {
-            params: { descricao: descricao }
-          })
-          const agendaDia = res.data as Agenda[]
-          console.log(res.data)
-          setEventos(agendaDia)
-        } catch (error) {
-          console.error(error)
-        }
-        }          
+  async function carregar() {
+    try {
+      const res = await api.get('/agendaBuscarNome', {
+        params: { descricao: descricao ?? '' }
+      })
+      setEventos(res.data as Agenda[])
+    } catch (error) {
+      console.error(error)
     }
+  }
+
+  useEffect(() => {
+    carregar()
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- recarrega quando o termo muda
+  }, [descricao])
 
   function editarAgenda(agenda: Agenda){
     setAgendaSelecionada(agenda)
@@ -59,55 +40,40 @@ async function carregar() {
     carregar()
   }
 
-  async function deletarAgenda(id: Number) {
-    const res = await api.delete('/deletarAgenda',{
-      params: {id: id}
-    })
+  async function deletarAgenda(id: number) {
+    try {
+      await api.delete('/deletarAgenda',{
+        params: {id: id}
+      })
+    } catch (error) {
+      alert(mensagemErro(error))
+    }
     carregar()
   }
 
-if (eventos.length <= 0) return <div>Nenhum evento</div>
-console.log(eventos.length)
-console.log(eventos)
   return (
-    <div >
-      <h1 className='titulo'>Apontamentos pesquisado</h1>
+    <div>
+      <h1 className='titulo'>{eventos.length} resultado{eventos.length === 1 ? '' : 's'} para &quot;{descricao}&quot;</h1>
+      {eventos.length === 0 && <p className='semEventos'>Nenhum agendamento encontrado</p>}
       <div className='containerAgendaDia'>
-      {eventos.map((agenda: Agenda) => {
-        if(agenda.id)
-        return (
-          <div className='agendaDia' key={agenda.id}>
-            <div className='botoesCard'>
-              <button className='botaoEditar' onClick={() => editarAgenda(agenda)}><FontAwesomeIcon icon={faPen} /></button>
-              <button className='botaoExcluir' onClick={() => {if (agenda.id != null) {deletarAgenda(agenda.id)}}}><FontAwesomeIcon icon={faTrash} /></button>
-            </div>
-            <div className='containerCondeudo'>
-              <h1>Nome do apontamento: {agenda.descricao}</h1>
-              <span className={classeStatus(agenda.status)}>{rotuloStatus[agenda.status || 'agendado']}</span>
-              <h2>Serviço: #{agenda.tipoAgendaId} {agenda.tipoAgenda?.descricao}</h2>
-              <h2>Profissional: #{agenda.funcionarioId} {agenda.funcionario?.descricao}</h2>
-              <h2>Cliente: #{agenda.clienteId} {agenda.cliente?.descricao}</h2>
-              <h2>Começo: {
-                    agenda.horaInicio
-                      ? new Date(agenda.horaInicio).toLocaleString('pt-BR')
-                      : ''
-                  }</h2>
-              <h2>Fim: {
-                    agenda.horaFim
-                      ? new Date(agenda.horaFim).toLocaleString('pt-BR')
-                      : ''
-                  }</h2>
-            </div>
-          </div>
-        )
-
-      })}
+        {eventos.map((agenda) => (
+          <CartaoAgenda key={agenda.id} agenda={agenda} mostrarData onEditar={editarAgenda} onExcluir={deletarAgenda}/>
+        ))}
+      </div>
       <Modal
         params={parametrosAgenda}
         onClose={fecharModal}
         agenda={agendaSelecionada}
       />
-      </div>
     </div>
+  )
+}
+
+// useSearchParams precisa de Suspense para a página poder ser gerada no build (next build)
+export default function PaginaPesquisa() {
+  return (
+    <Suspense fallback={<div>Carregando…</div>}>
+      <AgendaPesquisada/>
+    </Suspense>
   )
 }

@@ -4,29 +4,25 @@ import { useEffect, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import { api } from '@/src/services/api';
+import { useEventosAgenda } from '@/src/services/eventos';
 import '../globals.css'
 import { useRouter } from 'next/navigation';
 import { EVENTO_AGENDA_ALTERADA } from '@/src/components/CardAgenda';
 import { Evento } from '@/src/types/eventos';
 import { Agenda } from '@/src/types/agenda';
 
-export default function eventos() {
+export default function CalendarioAgenda() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   
   const router = useRouter();
 
-  useEffect(() => {
-    carregar();
-    // recarrega quando uma agenda é criada ou editada no modal da navbar
-    window.addEventListener(EVENTO_AGENDA_ALTERADA, carregar)
-    return () => window.removeEventListener(EVENTO_AGENDA_ALTERADA, carregar)
-  }, []);
   async function carregar() {
       try {
         const res = await api.get('/agendaBuscar');
 
-        if (res.data && res.data.length > 0) {
+        {
           const respostaAgenda = res.data as Agenda[];
           const eventosFormatados: Evento[] = respostaAgenda.map((agenda) => {
           return {
@@ -46,15 +42,26 @@ export default function eventos() {
           setEventos(eventosFormatados);
         }
       } catch (error) {
-        console.log("API não disponível, usando dados mockados", error);
+        console.error(error);
       }
     }
+
+  useEffect(() => {
+    carregar();
+    // recarrega quando uma agenda é criada ou editada no modal da navbar
+    window.addEventListener(EVENTO_AGENDA_ALTERADA, carregar)
+    return () => window.removeEventListener(EVENTO_AGENDA_ALTERADA, carregar)
+  }, []);
+
+  // tempo real: agendas criadas ou alteradas em outro aparelho aparecem na hora
+  useEventosAgenda(() => { carregar() })
 
   return (
     <div className='calendario'>
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
+        locale={ptBrLocale}
         // preenche a altura do contêiner; dias com muitos agendamentos mostram "+N mais"
         height="100%"
         dayMaxEvents={true}
@@ -89,7 +96,7 @@ export default function eventos() {
         }}}
 
         dayCellDidMount={(info) => {
-          info.el.addEventListener('dblclick', (e) => {
+          info.el.addEventListener('dblclick', () => {
           const dataClicada = info.date
             .toISOString()
             .split('T')[0]

@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Salão — gestão de tempo e serviços (front-end)
 
-## Getting Started
+Interface em Next.js do Projeto Integrador. A API fica no repositório
+[ProjetoIntegradorApi](https://github.com/FeMarquess/ProjetoIntegradorApi).
 
-First, run the development server:
+## Rodando
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local    # NEXT_PUBLIC_API_URL = endereço da API
+npm install
+npm run dev                   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Na Vercel, defina `NEXT_PUBLIC_API_URL` com a URL pública da API hospedada; sem ela o site
+tenta falar com `http://localhost:3333`, que só existe na máquina de quem está desenvolvendo.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Testes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test          # Vitest + Testing Library
+npm run lint
+npm run build
+```
 
-## Learn More
+O GitHub Actions (`.github/workflows/ci.yml`) roda lint, testes e build a cada push.
 
-To learn more about Next.js, take a look at the following resources:
+| Arquivo | O que testa |
+|---|---|
+| `test/utils.test.ts` | máscaras de data, hora e telefone; validação de datas; rótulos de status; mensagens de erro da API |
+| `test/painel.test.tsx` | painel da profissional: botões por etapa, chamadas à API, recusa com mensagem, aviso em tempo real |
+| `test/cadastros.test.tsx` | profissional com várias especialidades, histórico da cliente, conflito de horário no agendamento |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Telas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Rota | Função |
+|---|---|
+| `/` | painel do dia (atualiza em tempo real) |
+| `/clientes` | cadastro de clientes e histórico de procedimentos |
+| `/profissionais` | cadastro de profissionais com uma ou mais especialidades |
+| `/especialidades` | cadastro dos serviços (manicure, cabelo, maquiagem…) |
+| `/agenda` | calendário; duplo clique abre o dia ou o agendamento |
+| `/painel` | painel da profissional: iniciar/concluir etapas, aviso e notificação quando uma etapa é liberada |
+| `/indicadores` | BI: serviços mais procurados, faixas etárias, próximos agendamentos, tempo previsto × real |
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Tempo real:** as telas abrem uma conexão com `GET /eventos` da API (Server-Sent Events) e recarregam
+na hora quando a agenda muda em qualquer aparelho. A atualização periódica (30 s) continua como reserva.

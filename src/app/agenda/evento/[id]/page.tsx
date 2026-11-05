@@ -1,10 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 import { useRouter, useSearchParams } from 'next/navigation'
-import { api } from '@/src/services/api';
-import { rotuloStatus, classeStatus } from '@/src/utils/status';
+import { api, mensagemErro } from '@/src/services/api';
+import CartaoAgenda from '@/src/components/CartaoAgenda';
 import { Agenda } from '@/src/types/agenda';
 import { Modal } from '@/src/components/CardAgenda';
 
@@ -20,14 +18,8 @@ export default function CardEvento() {
   const [parametrosAgenda, setParametrosAgenda] = useState<IparametrosAgenda>({Editar: false, Criar: false, Aberto: false})
   const idParam = searchParams.get('id')
   const router = useRouter()
-    useEffect(() => {
-      carregar();
-    }, [idParam]) 
-
-    console.log('[data]')
-
-    if (!idParam) return
-     async function carregar() {
+  async function carregar() {
+      if (!idParam) return
       try {
         const res = await api.get('/agendaBuscarId', {
           params: { id: idParam }
@@ -38,6 +30,11 @@ export default function CardEvento() {
         console.error(error)
       }
   }
+
+  useEffect(() => {
+    carregar();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- recarrega quando o id muda
+  }, [idParam])
 
   async function editarAgenda(aberto: boolean){
     setParametrosAgenda({Editar: true,  Criar: false, Aberto: aberto})
@@ -65,39 +62,21 @@ const fecharModal = () => {
 }
 
   async function deletarAgenda() {
-    const res = await api.delete('/deletarAgenda',{
-      params: {id: idParam}
-    })
-    router.push('/agenda')
+    try {
+      await api.delete('/deletarAgenda',{
+        params: {id: idParam}
+      })
+      router.push('/agenda')
+    } catch (error) {
+      alert(mensagemErro(error))
+    }
   }
 
-  if (!evento) return <div>Nenhum evento</div>
+  if (!evento) return <p className='semEventos'>Agendamento não encontrado</p>
   return (
     <div className='containerAgendaUnica'>
-      <div className='agendaDia' key={evento.id}>
-        <div className='botoesCard'>
-          <button className='botaoEditar' onClick={() => editarAgenda(true)}><FontAwesomeIcon icon={faPen} /></button>
-          <button className='botaoExcluir' onClick={deletarAgenda}><FontAwesomeIcon icon={faTrash} /></button>
-        </div>          
-            <div className='containerCondeudo'>
-              <h1>Nome do apontamento: {evento.descricao}</h1>
-              <span className={classeStatus(evento.status)}>{rotuloStatus[evento.status || 'agendado']}</span>
-              <h2>Serviço: #{evento.tipoAgendaId} {evento.tipoAgenda?.descricao}</h2>
-              <h2>Profissional: #{evento.funcionarioId} {evento.funcionario?.descricao}</h2>
-              <h2>Cliente: #{evento.clienteId} {evento.cliente?.descricao}</h2>
-              <h2>Começo: {
-                    evento.horaInicio
-                      ? new Date(evento.horaInicio).toLocaleString('pt-BR')
-                      : ''
-                  }</h2>
-              <h2>Fim: {
-                    evento.horaFim
-                      ? new Date(evento.horaFim).toLocaleString('pt-BR')
-                      : ''
-                  }</h2>
-            </div>
-      </div>
-        <Modal params = {parametrosAgenda} onClose = {fecharModal} agenda={evento}/>
+      <CartaoAgenda agenda={evento} mostrarData onEditar={() => editarAgenda(true)} onExcluir={deletarAgenda}/>
+      <Modal params = {parametrosAgenda} onClose = {fecharModal} agenda={evento}/>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import '../app/globals.css'
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, mensagemErro } from '../services/api';
 import { Agenda } from '@/src/types/agenda';
 import { Cliente } from '@/src/types/cliente';
 import { Funcionario } from '@/src/types/funcionario';
@@ -21,7 +21,9 @@ interface props {
     dataInicial?: string
 }
 
+// a busca devolve um item por par (profissional, serviço que ela atende)
 interface FuncionarioEspecialidade extends Funcionario {
+    tipoAgendaId: number
     especialidade: string
 }
 
@@ -71,6 +73,22 @@ export function Modal({ params, onClose, agenda, dataInicial }: props,) {
     // etapas já salvas nesta visita, ao usar "Salvar e adicionar próxima etapa"
     const [etapas, setEtapas] = useState<string[]>([])
 
+    // ao editar, mostra nos campos de busca o cliente e a profissional que já estão na agenda
+    async function carregarNomes(agenda: Agenda) {
+        try {
+            const [resCliente, resFuncionario, resTipo] = await Promise.all([
+                api.get('/clienteBuscarId', { params: { id: agenda.clienteId } }),
+                api.get('/funcionarioBuscarId', { params: { id: agenda.funcionarioId } }),
+                api.get('/tipoAgendaBuscarId', { params: { id: agenda.tipoAgendaId } })
+            ])
+            if (resCliente.data?.id) setNomeCliente(textoCliente(resCliente.data))
+            if (resFuncionario.data?.id) setNomeProfissional(textoProfissional(resFuncionario.data, resTipo.data?.descricao || ''))
+            setServico(resTipo.data?.descricao || '')
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     useEffect(() => {
         setErro('')
         setEtapas([])
@@ -100,27 +118,12 @@ export function Modal({ params, onClose, agenda, dataInicial }: props,) {
         }
     }, [agenda, params.Aberto]);
 
-    // ao editar, mostra nos campos de busca o cliente e a profissional que já estão na agenda
-    async function carregarNomes(agenda: Agenda) {
-        try {
-            const [resCliente, resFuncionario, resTipo] = await Promise.all([
-                api.get('/clienteBuscarId', { params: { id: agenda.clienteId } }),
-                api.get('/funcionarioBuscarId', { params: { id: agenda.funcionarioId } }),
-                api.get('/tipoAgendaBuscarId', { params: { id: agenda.tipoAgendaId } })
-            ])
-            if (resCliente.data?.id) setNomeCliente(textoCliente(resCliente.data))
-            if (resFuncionario.data?.id) setNomeProfissional(textoProfissional(resFuncionario.data, resTipo.data?.descricao || ''))
-            setServico(resTipo.data?.descricao || '')
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
     async function buscarProfissionais(termo: string): Promise<ItemBusca[]> {
         const res = await api.get('/funcionarioBuscarEspecialidade', { params: { descricao: termo } })
         const lista = res.data as FuncionarioEspecialidade[]
         setProfissionais(lista)
-        return lista.map((f) => ({ id: f.id!, texto: textoProfissional(f, f.especialidade) }))
+        // a mesma profissional pode aparecer uma vez por serviço: o id do item é a posição na lista
+        return lista.map((f, i) => ({ id: i, texto: textoProfissional(f, f.especialidade) }))
     }
 
     // descrição automática: "Cabelo — Camila Arne"
@@ -139,15 +142,16 @@ export function Modal({ params, onClose, agenda, dataInicial }: props,) {
     }
 
     function escolherProfissional(item: ItemBusca) {
-        const profissional = profissionais.find((f) => f.id === item.id)
-        const nomeServico = profissional?.especialidade || ''
+        const profissional = profissionais[item.id]
+        if (!profissional) return
+        const nomeServico = profissional.especialidade
         setServico(nomeServico)
         setNomeProfissional(item.texto)
         // o serviço da agenda é a especialidade da profissional escolhida
         setAgendas({
             ...agendas!,
-            funcionarioId: item.id,
-            tipoAgendaId: profissional?.funcao || 0,
+            funcionarioId: profissional.id!,
+            tipoAgendaId: profissional.tipoAgendaId,
             descricao: descricaoEditada ? agendas!.descricao : descricaoAutomatica(nomeServico, nomeCliente)
         })
     }
@@ -180,12 +184,13 @@ export function Modal({ params, onClose, agenda, dataInicial }: props,) {
             horaFim: fim
         }
 
-        const res = params.Editar
-            ? await api.put('/alterarAgenda', dados, { params: { id: agendas.id } })
-            : await api.post('/agenda', dados)
-
-        // a API devolve texto quando recusa a agenda
-        if (typeof res.data === 'string' && res.data !== 'Sucesso ao alterar') return setErro(res.data)
+        try {
+            if (params.Editar) await api.put('/alterarAgenda', dados, { params: { id: agendas.id } })
+            else await api.post('/agenda', dados)
+        } catch (error) {
+            // ex.: 409 quando a profissional ou a cliente já tem atendimento nesse horário
+            return setErro(mensagemErro(error, 'Não foi possível salvar a agenda. Tente de novo.'))
+        }
 
         window.dispatchEvent(new Event(EVENTO_AGENDA_ALTERADA))
 

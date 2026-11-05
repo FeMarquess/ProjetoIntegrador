@@ -5,23 +5,24 @@ export default function Pesquisa () {
 const [valor, setValor] = useState('') 
 const router = useRouter()
 
-console.log(valor)
-
 async function carregar(e: React.FormEvent) {
         e.preventDefault()
 try {
-    router.push(`/agenda/pesquisa?descricao=${valor}`);
+    router.push(`/agenda/pesquisa?descricao=${encodeURIComponent(valor)}`);
     } catch (error) {
     console.error(error)
     }
 }
 
 return(
-    <div>
-        <form onSubmit={carregar}>
+    <div className='pesquisaNav'>
+        <form className='formPesquisa' role='search' onSubmit={carregar}>
             <input value={valor}
+                    type='search'
+                    aria-label='Pesquisar agendamentos'
+                    placeholder='Buscar agendamento'
                     onChange={(e) => setValor(e.target.value)}
-                    style={{backgroundColor: 'gray', border: 'rounded', borderRadius: '6px', marginRight: '10px'}}>                        
+                    style={{backgroundColor: 'gray', border: 'rounded', borderRadius: '6px'}}>
             </input>
             <button type='submit'>Pesquisar</button>
         </form>

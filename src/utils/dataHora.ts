@@ -50,3 +50,30 @@ export function montarDataHora(dataTexto: string, horaTexto: string): Date | nul
 export function somarMinutos(data: Date, minutos: number) {
   return new Date(data.getTime() + minutos * 60000)
 }
+
+// "14:00"
+export function horaCurta(data: string | Date | null | undefined) {
+  return data ? new Date(data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''
+}
+
+// "qua, 04/11"
+export function diaCurto(data: string | Date) {
+  const d = new Date(data)
+  const semana = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
+  return `${semana}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`
+}
+
+// "Quarta, 04/11" (aceita "AAAA-MM-DD" da URL, lido no horário local)
+export function diaLongo(data: string | Date) {
+  const d = typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data) ? new Date(`${data}T00:00:00`) : new Date(data)
+  const semana = d.toLocaleDateString('pt-BR', { weekday: 'long' }).split('-')[0]
+  return `${semana.charAt(0).toUpperCase()}${semana.slice(1)}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`
+}
+
+// Idade completa em anos; a data de nascimento vem da API como "AAAA-MM-DD..." (meia-noite UTC)
+export function idade(nascimento: string, hoje = new Date()) {
+  const [ano, mes, dia] = nascimento.split('T')[0].split('-').map(Number)
+  let anos = hoje.getFullYear() - ano
+  if (hoje.getMonth() + 1 < mes || (hoje.getMonth() + 1 === mes && hoje.getDate() < dia)) anos--
+  return anos
+}
